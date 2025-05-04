@@ -1,0 +1,2 @@
+- analyzys tool attatched to the simulation
+    - just more info like filled to unfilled ratio
