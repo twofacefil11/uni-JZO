@@ -1,14 +1,14 @@
 #include "Buffer.h"
 
-// : dimentions(dimentions)//, cells(dimentions.height),
-// std::vector<Cell>(dimentions.width, Cell(Pos))
+// : dimensions(dimensions)//, cells(dimensions.height),
+// std::vector<Cell>(dimensions.width, Cell(Pos))
 // naprawde brzydki syntax.
-Buffer::Buffer(Dim dimentions)
-    : dimentions(dimentions),
-      cells(dimentions.height, std::vector<Cell>(dimentions.width))
-{
-  for (int y = 0; y < dimentions.height; ++y) {
-    for (int x = 0; x < dimentions.width; ++x) {
+
+Buffer::Buffer(Dim dim)
+    : dimensions(dim), cells(dim.height, std::vector<Cell>(dim.width)) {
+
+  for (int y = 0; y < dimensions.height; ++y) {
+    for (int x = 0; x < dimensions.width; ++x) {
       cells[y][x] = Cell(x, y);
     }
   }

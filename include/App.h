@@ -17,10 +17,7 @@ public:
 
 private:
   Display display;
-  //
-  //aplikacja będzie zażądzać wymianą informacji między sim a disp.
-  
-  Simulation simulation();
+  Simulation simulation;
 };
 
 #endif // APP_H

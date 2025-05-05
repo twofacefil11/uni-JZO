@@ -14,7 +14,8 @@ DisplayTUI::DisplayTUI() {
 
   remakeDisplayBuffer(get_displayDimensions());
 
-  TUIPanelMain mainPanel(displayDimensions, UIAlignment::MAIN);
+  TUIPanelMain mainPanel(displayDimensions, 
+                         UIAlignment::MAIN);
 
   // TODO
   // TUIPanelInfo infoPanel(displayDimensions, UIAlignment::TL);
@@ -67,18 +68,15 @@ Pos DisplayTUI::calculateTopLeft(Dim dim, enum UIAlignment align) {
   return {0, 0};
 }
 
-
-void DisplayTUI::writeToDisplayBuffer(Dim size, char *inBuffer,
-                                      enum UIAlignment align) {
-  Pos topLeft = calculateTopLeft(size, align);
+void DisplayTUI::writeToDisplayBuffer(const TUIPanel &e) {
+  Pos topLeft = calculateTopLeft(e.dimensions, e.align);
 
   // TEST: should be right? this might go off might not
-  for (int y = 0; y < size.height; y++)
-    for (int x = 0; x < size.width; x++)
+  for (int y = 0; y < e.dimensions.height; y++)
+    for (int x = 0; x < e.dimensions.width; x++)
       displayBuffer[(displayDimensions.width * topLeft.y) + topLeft.x + x] =
-          inBuffer[(y * size.width) + x];
+          e.contents[(y * e.dimensions.width) + x];
 }
-
 
 void DisplayTUI::draw() {
   flattenDrawables();
@@ -94,12 +92,11 @@ void DisplayTUI::draw() {
 //
 // // ROUTINE
 // fflush(stdout);
-//
-//FIX
+
+// FIX // nevermind?jjgg
 void DisplayTUI::flattenDrawables() {
   for (int i = 0; i < UIElements.size(); i++) {
-    writeToDisplayBuffer(UIElements[i]->dimensions, UIElements[i]->contents,
-                         UIElements[i]->align); // TODO
+    writeToDisplayBuffer(*UIElements[i]); // TODO
   }
   // writeToDisplayBuffer(Dim size, char *inBuffer) //calculateTopLeft  TODO
 }
@@ -123,10 +120,14 @@ void DisplayTUI::terminalRelease() {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &normal_mode);
 }
 
-Dim DisplayTUI::get_displayDimensions() {
+Dim DisplayTUI::set_displayDimensions() {
   struct winsize w;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
   displayDimensions = {w.ws_col, w.ws_row};
+  return displayDimensions;
+}
+
+Dim DisplayTUI::get_displayDimensions() {
   return displayDimensions;
 }
 

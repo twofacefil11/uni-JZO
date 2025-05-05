@@ -10,10 +10,10 @@
 class Buffer {
 private:
   std::vector<std::vector<Cell>> cells;
-  Dim dimentions;
+  Dim dimensions;
 
 public:
-  Buffer(Dim dimentions);
+  Buffer(Dim dim);
 
   Cell &at(Pos position); // dla mrówki, może się przydać
 };

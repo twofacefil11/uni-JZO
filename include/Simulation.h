@@ -1,4 +1,4 @@
-#pragma once
+#pragma onc
 
 #ifndef SIMULATION_H
 #define SIMULATION_H
@@ -10,10 +10,11 @@ class Simulation {
 public:
   Simulation(Dim drawableArea);
   Simulation(Dim drawableArea, Pos antPosition);
+  
 
   // jak dodam ID to będzie można puszczać kilka symulacja na raz
   void start();
-  void step();
+  void step(); // TODO please cap the ant... 
   void stop();
   void restart();
   void quit();

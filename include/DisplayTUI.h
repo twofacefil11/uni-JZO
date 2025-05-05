@@ -34,6 +34,8 @@ public:
   // void get_userWorkingArea() override; // to możliwe że powinno być w BOX, po
   // dodaniu ramki
 
+  Dim get_displayDimensions() override;
+
 private:
   // std::vector<Drawable> elementQue; // to nie jest struktura, que, to tylko
   std::vector<TUIPanel *> UIElements;
@@ -44,15 +46,16 @@ private:
   void terminalRelease();
 
   char *remakeDisplayBuffer(Dim dimensions) override;
-  void set_resizePendingFlag(bool flag) override;
+  void set_resizePendingFlag(bool flag) override; // well see
   void handleResize() override;
 
-  void writeToDisplayBuffer(Dim size, char *inBuffer, enum UIAlignment align);
+  // void writeToDisplayBuffer(Dim size, char *inBuffer, enum UIAlignment
+  // align);
+  void writeToDisplayBuffer(const TUIPanel &);
   void flattenDrawables();
 
   Pos calculateTopLeft(Dim dim, enum UIAlignment align);
-  Dim get_displayDimensions() override;
-
+  Dim set_displayDimensions() override;
 #ifdef _WIN32
 #elif __linux__
   struct termios normal_mode; // set by terminalTakeOver() do przywołania
