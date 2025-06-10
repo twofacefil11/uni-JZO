@@ -12,6 +12,7 @@ int main() {
   //  anyways keep it simple.
 
   App app;
+  app.update();
   // simulation and display may have init.
   // simualtion may initialize with the constructor,
   // the display rather cant or shouldnt.

@@ -13,3 +13,7 @@ Buffer::Buffer(Dim dim)
     }
   }
 }
+
+void Buffer::update() {
+// TODO
+}

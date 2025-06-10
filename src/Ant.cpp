@@ -19,3 +19,7 @@ void Ant::turnRight() {
 void Ant::flipState() {
   direction.turnBack();
 }
+
+void Ant::update() {
+  // TODO
+}

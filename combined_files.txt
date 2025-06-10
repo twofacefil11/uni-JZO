@@ -1,0 +1,906 @@
+// ======== FILE: include/Ant.h ========
+#pragma once
+
+#ifndef ANT_H
+#define ANT_H
+
+#include "utils.h"
+
+class Cell;
+
+class Ant {
+private:
+  Pos position;
+  Dir direction = {1, 0}; // możliwe że będziemy chcieli precyzować dir mrówki
+                          // na starcie later.......
+
+  Pos calculateCenter(Dim boardDimentions);
+
+public:
+  Ant(Pos position);
+  void go();
+  void turnRight();
+  void turnLeft();
+  void flipState(); //zobaczymy jak to będzi
+};
+
+#endif // ANT_H
+
+
+
+// ======== FILE: include/App.h ========
+#pragma once
+
+#include "Display.h"
+#include "Simulation.h"
+
+#ifndef APP_H
+#define APP_H
+
+// ist gonna hold the state somehow? i dont fucking know
+class App {
+
+public:
+  App();
+  void run();
+  void init();
+
+
+private:
+  Display display;
+  Simulation simulation;
+};
+
+#endif // APP_H
+
+
+
+// ======== FILE: include/Buffer.h ========
+#pragma once
+
+#ifndef BUFFER_H
+#define BUFFER_H
+
+#include "Cell.h"
+#include "utils.h"
+#include <vector>
+
+class Buffer {
+private:
+  std::vector<std::vector<Cell>> cells;
+  Dim dimensions;
+
+public:
+  Buffer(Dim dim);
+
+  Cell &at(Pos position); // dla mrówki, może się przydać
+};
+
+
+#endif // BUFFER_H
+
+
+
+// ======== FILE: include/Cell.h ========
+#pragma once
+
+#ifndef CELL_H
+#define CELL_H
+
+#include "utils.h"
+
+class Cell {
+private:
+  bool state;
+  Pos index;
+
+public:
+  Cell(Pos index, bool state = 0); // nie wiem jeszcze co będze wygodniejsze
+  Cell(unsigned int x, unsigned int y, bool state = 0);
+
+  void flipState(); // a friend or something? naa..
+};
+#endif // CELL_H
+
+
+
+// ======== FILE: include/Display.h ========
+#pragma once
+
+#include "Buffer.h"
+#ifndef DISPLAY_H
+#define DISPLAY_H
+
+#include "utils.h"
+
+class Display {
+public:
+  virtual void draw();
+  virtual void init(); // nie wiem czy będzie potrzebne. ale raczej tak
+
+  void pull_generation(unsigned int generation);
+
+  Dim push_userWorkingArea(); // oj chyba useles
+  Dim displayDimensions = {0, 0}; // ?????
+  // Dim get_displayDimensions;
+  virtual Dim get_displayDimensions();
+
+private:
+  
+  virtual Dim set_displayDimensions();
+  virtual void set_resizePendingFlag(bool flag);
+  virtual void handleResize();
+  virtual char* remakeDisplayBuffer(Dim dimensions);
+
+protected:
+  bool shouldResize = 1; // w app loopie będzie nadkondycja youll see
+  unsigned int generation = 0; // simualtion data class? maybe?
+  
+  // Dim userWorkingArea = {0, 0};
+};
+
+#endif // DISPLAY_H
+
+
+
+// ======== FILE: include/DisplayGUI.h ========
+#pragma once
+
+#ifndef DISPLAYGUI_H
+#define DISPLAYGUI_H
+
+
+
+#endif // DISPLAYGUI_H
+
+
+
+// ======== FILE: include/DisplayTUI.h ========
+#pragma once
+
+#ifndef DISPLAYTUI_H
+#define DISPLAYTUI_H
+
+#ifdef _WIN32
+// TODO
+
+#elif __linux__
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <unistd.h>
+
+#endif
+#include "TUIPanel.h"
+#include "TUIPanelGeneration.h"
+#include "TUIPanelInfo.h"
+#include "TUIPanelMain.h"
+
+#include "Display.h"
+#include <map>
+#include <memory>
+#include <stdio.h>
+
+class DisplayTUI : public Display {
+
+public:
+  DisplayTUI();
+  ~DisplayTUI();
+
+  void draw() override;
+  void init() override; // ???
+
+  // void get_userWorkingArea() override; // to możliwe że powinno być w BOX, po
+  // dodaniu ramki
+
+  Dim get_displayDimensions() override;
+
+private:
+  // std::vector<Drawable> elementQue; // to nie jest struktura, que, to tylko
+  std::vector<TUIPanel *> UIElements;
+  // jeżeli tak to
+  char *displayBuffer = nullptr;
+
+  void terminalTakeOver();
+  void terminalRelease();
+
+  char *remakeDisplayBuffer(Dim dimensions) override;
+  void set_resizePendingFlag(bool flag) override; // well see
+  void handleResize() override;
+
+  // void writeToDisplayBuffer(Dim size, char *inBuffer, enum UIAlignment
+  // align);
+  void writeToDisplayBuffer(const TUIPanel &);
+  void flattenDrawables();
+
+  Pos calculateTopLeft(Dim dim, enum UIAlignment align);
+  Dim set_displayDimensions() override;
+#ifdef _WIN32
+#elif __linux__
+  struct termios normal_mode; // set by terminalTakeOver() do przywołania
+#endif
+};
+
+#endif // DISPLAYTUI_H
+
+
+
+// ======== FILE: include/Simulation.h ========
+#pragma onc
+
+#ifndef SIMULATION_H
+#define SIMULATION_H
+
+#include "Ant.h"
+#include "Buffer.h"
+
+class Simulation {
+public:
+  Simulation(Dim drawableArea);
+  Simulation(Dim drawableArea, Pos antPosition);
+  
+
+  // jak dodam ID to będzie można puszczać kilka symulacja na raz
+  void start();
+  void step(); // TODO please cap the ant... 
+  void stop();
+  void restart();
+  void quit();
+
+  unsigned int get_generation();
+
+  void handleResize();                         //???????
+  void fastForeward(unsigned int generations); // ?????????????????
+
+private:
+  Ant ant;
+  Buffer board;
+
+  bool is_running = 0;
+  bool shouldQuit = 0;
+
+  unsigned int generation = 0;
+};
+
+#endif // SIMULATION_H
+
+
+
+// ======== FILE: include/TUIPanel.h ========
+#pragma once
+
+#ifndef TUIPANEL_H
+#define TUIPANEL_H
+
+#include "utils.h"
+#include <vector>
+
+enum class UIAlignment { MAIN, TL, TR, BL, BR, OVER, size };
+
+
+class TUIPanel {
+public:
+  TUIPanel(Dim dimensions, UIAlignment al);
+ 
+  virtual void update() = 0;
+
+  std::vector<char> contents;
+  Dim dimensions;
+  UIAlignment align;
+private:
+
+  // wydaje mi się ze konstruktorze powinno być dla każdego z nich osobno zchardkodowane co będzie wyświtlał ków ai gdzie. indexy innych żeczy mogą być ważne kórwa nie wiem for real może będdę to dopominał będe kórwa uważał na samym końcu anyway there needds to be a way of knowing whats the size of me and aslo what is the content size and the full zize with the order and if so wha is gonna be firs. so i guess the display initializes the stuff . it only can kno w the hardcoded  lsize of itsself, the rst like in eneration might change. and i would like it to resize acdcordingly so why dont i do this when i implement the update for everything fuck that for fucking real lest go back to displaytui
+};
+
+#endif // TUIPANEL_H
+
+
+
+// ======== FILE: include/TUIPanelGeneration.h ========
+#pragma once
+
+#ifndef TUIPANELGENERATION_H
+#define TUIPANELGENERATION_H
+
+#include "TUIPanel.h"
+
+class TUIPanelGeneration : public TUIPanel {
+public:
+  TUIPanelGeneration(Dim dim , UIAlignment al);
+  void update() override;
+};
+
+#endif // TUIPANELGENERATION_H
+
+
+
+// ======== FILE: include/TUIPanelInfo.h ========
+#pragma once
+
+#ifndef TUIPANELINFO_H
+#define TUIPANELINFO_H
+
+#include "TUIPanel.h"
+
+class TUIPanelInfo : public TUIPanel {
+public:
+  TUIPanelInfo();
+  void update() override;
+};
+
+#endif // TUIPANELINFO_H
+
+
+
+// ======== FILE: include/TUIPanelMain.h ========
+#pragma once
+
+#ifndef TUIPANELMAIN_H
+#define TUIPANELMAIN_H
+
+#include "TUIPanel.h"
+
+class TUIPanelMain : public TUIPanel {
+public:
+  TUIPanelMain(Dim dimensions, UIAlignment al);
+  void update() override;
+
+};
+
+#endif // TUIPANELMAIN_H
+
+
+
+// ======== FILE: include/utils.h ========
+#pragma once
+
+#ifndef UTILS_H
+#define UTILS_H
+
+typedef struct { // tęsknie za tobą, och C. 
+  unsigned int x;
+  unsigned int y;
+} Pos;
+
+struct Dim { 
+  unsigned int width;
+  unsigned int height;
+
+  unsigned int area();
+  Pos center();
+};
+
+struct Dir {
+  int x;
+  int y;
+
+  void turnRight();
+  void turnLeft();
+  void turnBack(); 
+};
+
+#endif // UTILS_H
+
+
+
+// ======== FILE: src/Ant.cpp ========
+#include "Ant.h"
+
+Ant::Ant(Pos position) : position(position) {};
+// buffer będzie odpowiedzialny za wyznaczanie środka
+
+void Ant::go() {
+  position.x += direction.x;
+  position.y += direction.y;
+}
+
+void Ant::turnLeft() {
+  direction.turnLeft();
+}
+
+void Ant::turnRight() {
+  direction.turnRight();
+}
+
+void Ant::flipState() {
+  direction.turnBack();
+}
+
+
+
+// ======== FILE: src/App.cpp ========
+#include "App.h"
+
+App::App() : display(), simulation(display.get_displayDimensions()) {}
+ 
+// NOTE
+// turn on -Wreorder (GCC/Clang) - powiadamia o kolejności wywoływania i
+// deklarowania. ważne xd
+
+
+
+// ======== FILE: src/Buffer.cpp ========
+#include "Buffer.h"
+
+// : dimensions(dimensions)//, cells(dimensions.height),
+// std::vector<Cell>(dimensions.width, Cell(Pos))
+// naprawde brzydki syntax.
+
+Buffer::Buffer(Dim dim)
+    : dimensions(dim), cells(dim.height, std::vector<Cell>(dim.width)) {
+
+  for (int y = 0; y < dimensions.height; ++y) {
+    for (int x = 0; x < dimensions.width; ++x) {
+      cells[y][x] = Cell(x, y);
+    }
+  }
+}
+
+
+
+// ======== FILE: src/Cell.cpp ========
+#include "Cell.h"
+
+Cell::Cell(Pos index, bool state) : index(index), state(state) {}
+Cell::Cell(unsigned int x, unsigned int y, bool state)
+    : index{x, y}, state(state) {}
+
+
+void Cell::flipState() { state = !state; }
+
+
+
+// ======== FILE: src/Display.cpp ========
+#include "Display.h"
+
+void Display::pull_generation(unsigned int generation) {
+  generation = generation;
+}
+
+
+
+
+// ======== FILE: src/DisplayGUI.cpp ========
+#include "DisplayGUI.h"
+
+
+
+
+
+// ======== FILE: src/DisplayTUI.cpp ========
+#include "DisplayTUI.h"
+#include <iostream>
+
+#ifdef _WIN32
+DisplayTUI::DisplayTUI() {
+  // Najwazniejsze to inicjalizacja stanu display.
+}
+
+#elif __linux__
+
+DisplayTUI::DisplayTUI() {
+
+  terminalTakeOver();
+
+  remakeDisplayBuffer(get_displayDimensions());
+
+  TUIPanelMain mainPanel(displayDimensions, UIAlignment::MAIN);
+
+  // TODO
+  // TUIPanelInfo infoPanel(displayDimensions, UIAlignment::TL);
+  // TUIPanelGeneration generationPanel(displayDimensions, UIAlignment::BR);
+
+  UIElements.push_back(&mainPanel);
+
+  // TODO
+  // UIElements.push_back(&generationPanel);
+  // UIElements.push_back(&infoPanel);
+}
+//--------------------------------------------------------------------------
+
+DisplayTUI::~DisplayTUI() {
+  terminalRelease();
+  delete[] displayBuffer;
+}
+//--------------------------------------------------------------------------
+
+char *DisplayTUI::remakeDisplayBuffer(Dim dimensions) {
+  delete[] displayBuffer;
+  displayBuffer = new char[dimensions.area()]; // TODO:
+  return displayBuffer;
+}
+//--------------------------------------------------------------------------
+
+Pos DisplayTUI::calculateTopLeft(Dim dim, enum UIAlignment align) {
+  // TEST THISSSSS
+  switch (align) {
+  case UIAlignment::MAIN:
+    return {0, 0};
+
+  case UIAlignment::TL:
+    return {0, 0};
+
+  case UIAlignment::TR:
+    return {displayDimensions.width - dim.width, 0};
+
+  case UIAlignment::BL:
+    return {0, displayDimensions.height - dim.height};
+
+  case UIAlignment::BR:
+    return {displayDimensions.width - dim.width,
+            displayDimensions.height - dim.height};
+
+  case UIAlignment::OVER:
+    return {displayDimensions.center().x - dim.center().x,
+            displayDimensions.center().y - dim.center().y};
+  default:
+    break;
+  }
+
+  return {0, 0};
+}
+//--------------------------------------------------------------------------
+
+void DisplayTUI::writeToDisplayBuffer(const TUIPanel &e) {
+  Pos topLeft = calculateTopLeft(e.dimensions, e.align);
+
+  // TEST: should be right? this might go off might not
+  for (int y = 0; y < e.dimensions.height; y++)
+    for (int x = 0; x < e.dimensions.width; x++)
+      displayBuffer[(displayDimensions.width * topLeft.y) + topLeft.x + x] =
+          e.contents[(y * e.dimensions.width) + x];
+}
+
+//--------------------------------------------------------------------------
+void DisplayTUI::draw() {
+  flattenDrawables();
+  std::cout.write(displayBuffer, displayDimensions.area());
+  std::cout.flush();
+}
+
+// writeToDisplayBuffer();
+// TODO
+//
+// for shure iteracja po jakiejś podwójnej array, może lepiej będzie po
+// pojedyczej zobaczymy. calls like that będą na pewno:
+//
+// // ROUTINE
+// fflush(stdout);
+
+//--------------------------------------------------------------------------
+// FIX // nevermind?jjgg
+void DisplayTUI::flattenDrawables() {
+  for (int i = 0; i < UIElements.size(); i++) {
+    writeToDisplayBuffer(*UIElements[i]); // TODO
+  }
+  // writeToDisplayBuffer(Dim size, char *inBuffer) //calculateTopLeft  TODO
+}
+//--------------------------------------------------------------------------
+void DisplayTUI::terminalTakeOver() {
+
+  printf("\x1b[?25l"); // cursor invisible
+
+  // tcgetattr(STDIN_FILENO, &normal_mode);
+
+  // kopia poprzedniego stanu i wejście w raw mode
+  struct termios raw = normal_mode;
+  raw.c_lflag &= ~(ECHO | ICANON);
+  raw.c_cc[VMIN] = 0;
+  raw.c_cc[VTIME] = 1;
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+}
+
+//--------------------------------------------------------------------------
+void DisplayTUI::terminalRelease() {
+  printf("\x1b[?25h\x1b[2J\x1b[H"); // cursor visible // clear scr // go 00
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &normal_mode);
+}
+//--------------------------------------------------------------------------
+
+Dim DisplayTUI::set_displayDimensions() {
+  struct winsize w;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+  displayDimensions = {w.ws_col, w.ws_row};
+  return displayDimensions;
+}
+//--------------------------------------------------------------------------
+
+Dim DisplayTUI::get_displayDimensions() {
+  return displayDimensions;
+}
+//--------------------------------------------------------------------------
+
+void DisplayTUI::handleResize() {
+
+  // TODO
+}
+//--------------------------------------------------------------------------
+
+void DisplayTUI::set_resizePendingFlag(bool flag) { shouldResize = flag; }
+
+#else
+#endif
+
+
+
+// ======== FILE: src/main.cp.cpp ========
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <unistd.h>
+
+typedef struct {
+  int v;
+  int h;
+} Position;
+
+void buffer_cleanup(bool **buffer, int rows);
+bool **new_buffer(Position dimentions);
+
+int main(int argc, char **argv) {
+
+  // TERM SETUP
+  printf("\x1b[?25l"); // cursor invisible
+
+  struct termios normal_mode;
+  tcgetattr(STDIN_FILENO, &normal_mode);
+
+  struct termios raw;
+  tcgetattr(STDIN_FILENO, &raw);
+  raw.c_lflag &= ~(ECHO | ICANON);
+  raw.c_cc[VMIN] = 0;
+  raw.c_cc[VTIME] = 1;
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+
+  // WINDOW
+  struct winsize w;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+  Position win_size = {w.ws_row, w.ws_col};
+
+  // BUFFERS
+  bool **curr_buffer = new_buffer(win_size);
+  bool **next_buffer = new_buffer(win_size);
+
+  // sample starting point
+  Position halfpoint = {win_size.v / 2, win_size.h / 2};
+
+  //..x..
+  //.xx..
+  //..x..
+  //..xx
+
+  curr_buffer[halfpoint.v][halfpoint.h] = 1;
+  curr_buffer[halfpoint.v][halfpoint.h + 1] = 1;
+  curr_buffer[halfpoint.v + 1][halfpoint.h] = 1;
+  curr_buffer[halfpoint.v - 1][halfpoint.h] = 1;
+  curr_buffer[halfpoint.v + 2][halfpoint.h + 1] = 1;
+
+  int sum_n = 0;
+  int gen_count = 0;
+  char input = ' ';
+
+  while (input != 'q') {
+
+    while (read(STDIN_FILENO, &input, 1)) {
+    }
+
+    // if (gen_count == 1)
+    //   sleep(2);
+
+    // LIFE
+    for (int i = 1; i < win_size.v - 1; i++) {
+      for (int j = 1; j < win_size.h - 1; j++) {
+
+        // NEIGHBOURS
+        sum_n = (curr_buffer[i + 1][j - 1]) + (curr_buffer[i + 1][j]) +
+                (curr_buffer[i + 1][j + 1]) + (curr_buffer[i][j - 1]) +
+                (curr_buffer[i][j + 1]) + (curr_buffer[i - 1][j + 1]) +
+                (curr_buffer[i - 1][j - 1]) + (curr_buffer[i - 1][j]);
+
+        // LOGIC / RULES
+
+        //   if (sum_n == 1 || sum_n > 3)
+        //     next_buffer[i][j] = 0;
+        //   if ((sum_n == 2) || (sum_n == 3))
+        //     next_buffer[i][j] = 1;
+
+        if (curr_buffer[i][j])
+          next_buffer[i][j] =
+              !(sum_n == 1 || sum_n > 3) || ((sum_n == 2) || (sum_n == 3));
+        else
+          next_buffer[i][j] = !(sum_n - 3);
+      }
+    }
+
+    // DRAW
+    // printf("\x1b[2J"); // clear screen // niepotrzebne raczej
+    printf("\x1b[H");
+
+    for (int i = 0; i < win_size.v; i++) {
+      for (int j = 0; j < win_size.h; j++) {
+        if (i == 0 || i == w.ws_row - 1 || j == 0 || j == w.ws_col - 1)
+          printf("#");
+        else {
+          printf("%c", (next_buffer[i][j]) ? '0' : ' ');
+        }
+      }
+      printf("\x1b[1E");
+    }
+
+    // FRAME
+    for (int i = 0; i < win_size.v; i++) {
+      for (int j = 0; j < win_size.h; j++) {
+        if (i == 0 || i == w.ws_row - 1 || j == 0 || j == w.ws_col - 1)
+          printf("\x1b[1d#");
+      }
+    }
+
+    // counting info
+    printf("\x1b[2;2H"); // go 0, 0
+    printf("Generation: %i", gen_count++);
+    printf("\x1b[%i;%iH", win_size.v - 1, 2); // go 0, 0
+    printf("Nasisnij 'q' zeby wyjść");
+
+    // SWAP BUFFERS
+    bool **temp = curr_buffer;
+    curr_buffer = next_buffer;
+    next_buffer = temp;
+
+    // ROUTINE
+    fflush(stdout);
+    usleep(200 * 1000);
+  }
+
+  // out of the while here jkbc
+  buffer_cleanup(curr_buffer, win_size.v);
+  buffer_cleanup(next_buffer, win_size.v);
+
+  printf("\x1b[?25h\x1b[2J\x1b[H"); // cursor visible // clear scr // go 00
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &normal_mode);
+
+  return 0;
+}
+
+void buffer_cleanup(bool **buffer, int rows) {
+
+  for (int i = 0; i < rows; i++)
+    free(buffer[i]);
+  free(buffer);
+}
+
+bool **new_buffer(Position dimentions) {
+
+  bool **buffer = (bool**)malloc(sizeof(bool *) * dimentions.v);
+  if (buffer == NULL)
+    return NULL; // NOOOOOOOOOO
+
+  for (int i = 0; i < dimentions.v; i++) {
+    buffer[i] = (bool*)malloc(sizeof(bool) * dimentions.h); // check later please
+
+    // zero them
+    for (int j = 0; j < dimentions.h; j++) {
+      buffer[i][j] = 0;
+    }
+  }
+  return buffer;
+}
+
+
+
+// ======== FILE: src/main.cpp ========
+
+#include "App.h"
+
+int main() {
+  // the main should only create the app and run it.
+  // teoretycznie w każdym razie
+  //
+  //
+  //  gdzieś apka musi definiować w jaki sposób będzie odpalana.
+  //  podejrzewam że command line arguments to będzie to
+  //
+  //  anyways keep it simple.
+
+  App app;
+  // simulation and display may have init.
+  // simualtion may initialize with the constructor,
+  // the display rather cant or shouldnt.
+  // app.display.init();
+
+  // the app needs to know:
+  //  - the simulatiion type
+  //  - the operating system
+  //  - the sisplay way.
+  //
+  //  - it may be done by asking on the screen or by the
+  //  - command line argumenst ideally i would make it so that it wont be a
+  //  hustle to port it later.
+}
+
+
+
+// ======== FILE: src/Simulation.cpp ========
+#include "Simulation.h"
+
+// nie wiem czy zastąpiuć to init(); wyjdzie w praniu
+Simulation::Simulation(Dim drawableAreaDim)
+    : board({ drawableAreaDim.width - 2, drawableAreaDim.height - 2 }), ant(drawableAreaDim.center()) {};
+
+
+Simulation::Simulation(Dim drawableAreaDim, Pos antPosition)
+    : board({ drawableAreaDim.width - 2, drawableAreaDim.height - 2 }), ant(antPosition) {};
+
+// overload? - maybe later
+
+// THIS MIGHT BELONG IN THE BASE CLASS. TODO
+
+
+
+
+
+
+// ======== FILE: src/TUIPanel.cpp ========
+#include "TUIPanel.h"
+#include "utils.h"
+
+TUIPanel::TUIPanel(Dim dim, UIAlignment al)
+    : dimensions(dim), align(al), contents(dim.area(), ' ') {}
+
+
+
+// ======== FILE: src/TUIPanelGeneration.cpp ========
+#include "TUIPanelGeneration.h"
+
+
+TUIPanelGeneration::TUIPanelGeneration(Dim dim, UIAlignment al)
+    : TUIPanel(dim, al) {
+}
+
+
+
+// ======== FILE: src/TUIPanelInfo.cpp ========
+#include "TUIPanelInfo.h"
+
+
+
+
+
+// ======== FILE: src/TUIPanelMain.cpp ========
+#include "TUIPanelMain.h"
+
+TUIPanelMain::TUIPanelMain(Dim dim, UIAlignment al)
+    : TUIPanel(dim, al) { // contents nie tutaj, niżej.
+}
+
+
+
+// ======== FILE: src/utils.cpp ========
+#include "utils.h"
+
+void Dir::turnLeft() {
+  int tmp = y;
+  y = x;
+  x = -tmp;
+}
+
+void Dir::turnRight() {
+  int tmp = x;
+  x = y;
+  y = -tmp;
+}
+
+void Dir::turnBack() {
+  x = -x;
+  y = -y;
+}
+
+unsigned int Dim::area() {
+  return width * height;
+}
+
+Pos Dim::center() {
+  return {width >> 1, height >> 1};
+}
+
+
+

@@ -17,6 +17,8 @@ private:
 
 public:
   Ant(Pos position);
+
+  void update(); // rules TODO
   void go();
   void turnRight();
   void turnLeft();

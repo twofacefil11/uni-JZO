@@ -10,16 +10,16 @@ class Display {
 public:
   virtual void draw();
   virtual void init(); // nie wiem czy będzie potrzebne. ale raczej tak
-
+  virtual void update();
   void pull_generation(unsigned int generation);
 
   Dim push_userWorkingArea(); // oj chyba useles
   Dim displayDimensions = {0, 0}; // ?????
+  
   // Dim get_displayDimensions;
   virtual Dim get_displayDimensions();
 
 private:
-  
   virtual Dim set_displayDimensions();
   virtual void set_resizePendingFlag(bool flag);
   virtual void handleResize();

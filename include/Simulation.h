@@ -1,4 +1,4 @@
-#pragma onc
+#pragma once
 
 #ifndef SIMULATION_H
 #define SIMULATION_H
@@ -10,11 +10,11 @@ class Simulation {
 public:
   Simulation(Dim drawableArea);
   Simulation(Dim drawableArea, Pos antPosition);
-  
 
   // jak dodam ID to będzie można puszczać kilka symulacja na raz
+  void update();
   void start();
-  void step(); // TODO please cap the ant... 
+  void step(); // TODO please cap the ant...
   void stop();
   void restart();
   void quit();
@@ -22,10 +22,10 @@ public:
   unsigned int get_generation();
 
   void handleResize();                         //???????
-  void fastForeward(unsigned int generations); // ?????????????????
+  // void fastForeward(unsigned int generations); // ?????????????????
 
 private:
-  Ant ant;
+  Ant ant; // it shouldnt have ant... the ant should have an ant...
   Buffer board;
 
   bool is_running = 0;

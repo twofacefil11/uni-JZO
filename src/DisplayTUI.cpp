@@ -14,8 +14,7 @@ DisplayTUI::DisplayTUI() {
 
   remakeDisplayBuffer(get_displayDimensions());
 
-  TUIPanelMain mainPanel(displayDimensions, 
-                         UIAlignment::MAIN);
+  TUIPanelMain mainPanel(displayDimensions, UIAlignment::MAIN);
 
   // TODO
   // TUIPanelInfo infoPanel(displayDimensions, UIAlignment::TL);
@@ -27,17 +26,20 @@ DisplayTUI::DisplayTUI() {
   // UIElements.push_back(&generationPanel);
   // UIElements.push_back(&infoPanel);
 }
+//--------------------------------------------------------------------------
 
 DisplayTUI::~DisplayTUI() {
   terminalRelease();
   delete[] displayBuffer;
 }
+//--------------------------------------------------------------------------
 
 char *DisplayTUI::remakeDisplayBuffer(Dim dimensions) {
   delete[] displayBuffer;
   displayBuffer = new char[dimensions.area()]; // TODO:
   return displayBuffer;
 }
+//--------------------------------------------------------------------------
 
 Pos DisplayTUI::calculateTopLeft(Dim dim, enum UIAlignment align) {
   // TEST THISSSSS
@@ -67,6 +69,7 @@ Pos DisplayTUI::calculateTopLeft(Dim dim, enum UIAlignment align) {
 
   return {0, 0};
 }
+//--------------------------------------------------------------------------
 
 void DisplayTUI::writeToDisplayBuffer(const TUIPanel &e) {
   Pos topLeft = calculateTopLeft(e.dimensions, e.align);
@@ -78,6 +81,11 @@ void DisplayTUI::writeToDisplayBuffer(const TUIPanel &e) {
           e.contents[(y * e.dimensions.width) + x];
 }
 
+//--------------------------------------------------------------------------
+void DisplayTUI::update() {
+  // TODO
+}
+//--------------------------------------------------------------------------
 void DisplayTUI::draw() {
   flattenDrawables();
   std::cout.write(displayBuffer, displayDimensions.area());
@@ -93,6 +101,7 @@ void DisplayTUI::draw() {
 // // ROUTINE
 // fflush(stdout);
 
+//--------------------------------------------------------------------------
 // FIX // nevermind?jjgg
 void DisplayTUI::flattenDrawables() {
   for (int i = 0; i < UIElements.size(); i++) {
@@ -100,7 +109,7 @@ void DisplayTUI::flattenDrawables() {
   }
   // writeToDisplayBuffer(Dim size, char *inBuffer) //calculateTopLeft  TODO
 }
-
+//--------------------------------------------------------------------------
 void DisplayTUI::terminalTakeOver() {
 
   printf("\x1b[?25l"); // cursor invisible
@@ -115,10 +124,12 @@ void DisplayTUI::terminalTakeOver() {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
+//--------------------------------------------------------------------------
 void DisplayTUI::terminalRelease() {
   printf("\x1b[?25h\x1b[2J\x1b[H"); // cursor visible // clear scr // go 00
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &normal_mode);
 }
+//--------------------------------------------------------------------------
 
 Dim DisplayTUI::set_displayDimensions() {
   struct winsize w;
@@ -126,15 +137,16 @@ Dim DisplayTUI::set_displayDimensions() {
   displayDimensions = {w.ws_col, w.ws_row};
   return displayDimensions;
 }
+//--------------------------------------------------------------------------
 
-Dim DisplayTUI::get_displayDimensions() {
-  return displayDimensions;
-}
+Dim DisplayTUI::get_displayDimensions() { return displayDimensions; }
+//--------------------------------------------------------------------------
 
 void DisplayTUI::handleResize() {
 
   // TODO
 }
+//--------------------------------------------------------------------------
 
 void DisplayTUI::set_resizePendingFlag(bool flag) { shouldResize = flag; }
 

@@ -14,6 +14,7 @@ private:
 
 public:
   Buffer(Dim dim);
+  void update();
 
   Cell &at(Pos position); // dla mrówki, może się przydać
 };

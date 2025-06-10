@@ -30,6 +30,7 @@ public:
 
   void draw() override;
   void init() override; // ???
+  void update() override;
 
   // void get_userWorkingArea() override; // to możliwe że powinno być w BOX, po
   // dodaniu ramki

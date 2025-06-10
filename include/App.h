@@ -10,9 +10,11 @@
 class App {
 
 public:
+
   App();
-  void run();
+
   void init();
+  void update();
 
 
 private:
