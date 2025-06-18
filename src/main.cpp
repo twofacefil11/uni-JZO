@@ -10,9 +10,12 @@ int main() {
   //  podejrzewam że command line arguments to będzie to
   //
   //  anyways keep it simple.
+  
+  unique_pointer<DisplayTUI> displayTUI():
+  App app = makeApp();
 
-  App app;
   app.update();
+
   // simulation and display may have init.
   // simualtion may initialize with the constructor,
   // the display rather cant or shouldnt.

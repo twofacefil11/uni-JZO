@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "Display.h"
 #include "Simulation.h"
 
@@ -10,16 +12,13 @@
 class App {
 
 public:
-
-  App();
-
-  void init();
+  App(std::unique_ptr<Simulation> sinulation, std::unique_ptr<Display> display);
+  template <typename Sim, typename Dis> App makeApp();
   void update();
 
-
 private:
-  Display display;
-  Simulation simulation;
+  std::unique_ptr<Display> display;
+  std::unique_ptr<Simulation> simulation;
 };
 
 #endif // APP_H
