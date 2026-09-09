@@ -1,0 +1,30 @@
+Filip Król
+GRA WŁASNA (prawie)
+   
+INSTRUKCJA KOMPILACJI:
+Aby skompilować projekt, należy posiadać jakąkolwiek wersje 
+visual studio 22 (enterprise lub community edition).
+
+plik build.bat wywołuje środowisko, 
+z którego jest dostęp do kompilatora (cl), 
+po czym linkuje i kompiluje wszystko, co niezbędne i od razu 
+otwiera program.
+
+--------------------------------
+POLIMORFIZM
+
+klasa Simulation jest klasą bazową dla automatów komórkowych.
+Klasy dziedziczące biorą z niej board, oraz funkcję:
+update();
+step();
+
+zaimplementowanie tego rodzaju interfacu pozwala programiście
+w pliku main.cpp wybrać czy do konstruktora "App" podaje
+mrówkę langtona, czy grę w życie. (lub jakikolwiek automat komórkowy).
+
+Komentując linijkę 12 lub 13 w pliku main.cpp
+można wybrać sobie, która instancja "gry" nas interesuje.
+
+Zarówno App, jak i Display, nie są w żaden sposób zależne
+od klas dziedziczących z Simulation.
+
